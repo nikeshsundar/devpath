@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import categories from '../data/categories';
-import { getRepo, getRepos } from '../api/github';
+import REPOS from '../data/repos';
 import RepoCard from '../components/RepoCard';
 import Footer from '../components/Footer';
 import useReveal from '../hooks/useReveal';
@@ -37,33 +37,17 @@ export default function ExplorePage() {
   const cat = categories.find((c) => c.id === id);
 
   const [activeTopic, setActiveTopic] = useState(null);
-  const [repos, setRepos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  /* Fetch curated repo(s) */
-  useEffect(() => {
-    if (!cat) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
+  /* Look up static repo data — no API calls */
+  const repos = useMemo(() => {
+    if (!cat) return [];
     if (activeTopic) {
       const topic = cat.topics.find((t) => t.name === activeTopic);
-      if (!topic) { setLoading(false); return; }
-      getRepo(topic.repo)
-        .then((r) => { if (!cancelled) setRepos([r]); })
-        .catch((err) => { if (!cancelled) setError(err.message); })
-        .finally(() => { if (!cancelled) setLoading(false); });
-    } else {
-      const allNames = cat.topics.map((t) => t.repo);
-      getRepos(allNames)
-        .then((r) => { if (!cancelled) setRepos(r); })
-        .catch((err) => { if (!cancelled) setError(err.message); })
-        .finally(() => { if (!cancelled) setLoading(false); });
+      if (!topic) return [];
+      const r = REPOS[topic.repo];
+      return r ? [r] : [];
     }
-
-    return () => { cancelled = true; };
+    return cat.topics.map((t) => REPOS[t.repo]).filter(Boolean);
   }, [activeTopic, cat]);
 
   const [repoRef, repoVis] = useReveal();
@@ -131,23 +115,7 @@ export default function ExplorePage() {
             ( {activeTopic ? `Best Repo for ${activeTopic}` : 'Curated Repositories'} )
           </div>
 
-          {loading && (
-            <div className="status-msg">
-              <div className="spinner" />
-              <p>Fetching from GitHub&hellip;</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="status-msg">
-              <p>Error: {error}</p>
-              <p style={{ fontSize: '.78rem', marginTop: '.5rem' }}>
-                GitHub API rate limit may have been reached. Try again shortly.
-              </p>
-            </div>
-          )}
-
-          {!loading && !error && repos.length > 0 && (
+          {repos.length > 0 && (
             <div className={`repo-grid ${repos.length === 1 ? 'repo-grid--single' : ''}`}>
               {repos.map((repo) => (
                 <RepoCard key={repo.id} repo={repo} />
@@ -155,7 +123,7 @@ export default function ExplorePage() {
             </div>
           )}
 
-          {!loading && !error && repos.length === 0 && (
+          {repos.length === 0 && (
             <div className="status-msg">No repository found.</div>
           )}
         </section>

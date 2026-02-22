@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="footer">
       <span className="footer__brand">DevPath</span>
       <span className="footer__copy">
-        &copy; {new Date().getFullYear()} &mdash; Built for CS Students
+        &copy; {new Date().getFullYear()} &mdash; Built for Students by Nikesh
       </span>
       <div className="footer__links">
         <Link to="/">Home</Link>

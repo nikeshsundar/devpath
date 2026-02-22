@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ThemeProvider } from './context/ThemeContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import Navbar from './components/Navbar';
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/bookmarks" element={<BookmarksPage />} />
           </Routes>
         </BrowserRouter>
+        <Analytics />
       </BookmarkProvider>
     </ThemeProvider>
   );
